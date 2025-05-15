@@ -1,0 +1,1 @@
+<command>curl -o public/images/brain-logo.png https://raw.githubusercontent.com/stackblitz/brain-logo/main/brain-logo.png</command>
