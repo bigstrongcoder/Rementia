@@ -14,8 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     lerp: 0.1
   });
 
-  // Update ScrollTrigger on scroll
-  scroll.on('scroll', ScrollTrigger.update);
+  // Update ScrollTrigger on scroll using the correct event listener method
+  scroll.scroll.on('scroll', () => {
+    ScrollTrigger.update();
+  });
 
   // Navigation elements
   const navLinks = document.querySelectorAll('.nav-link');
@@ -89,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // Smooth scroll to section
+      // Smooth scroll to section using the correct scrollTo method
       scroll.scrollTo(document.querySelector(`#${targetId}`), {
         offset: -100,
         duration: 1000,
