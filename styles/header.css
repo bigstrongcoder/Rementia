@@ -36,7 +36,7 @@ header {
   height: 40px;
   object-fit: contain;
   transition: transform var(--transition-normal);
-  filter: hue-rotate(330deg) saturate(200%);
+  filter: brightness(0) saturate(100%) invert(19%) sepia(98%) saturate(7404%) hue-rotate(343deg) brightness(91%) contrast(94%);
 }
 
 .logo:hover .brain-logo {
