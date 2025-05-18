@@ -36,6 +36,7 @@ header {
   height: 40px;
   object-fit: contain;
   transition: transform var(--transition-normal);
+  filter: hue-rotate(330deg) saturate(200%);
 }
 
 .logo:hover .brain-logo {
