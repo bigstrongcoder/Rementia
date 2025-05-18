@@ -1,58 +1,136 @@
-// Navigation functionality
+// Navigation functionality with GSAP animations
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import LocomotiveScroll from 'locomotive-scroll';
+
+gsap.registerPlugin(ScrollTrigger);
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize smooth scroll
+  const scroll = new LocomotiveScroll({
+    el: document.querySelector('[data-scroll-container]'),
+    smooth: true,
+    multiplier: 1,
+    lerp: 0.1
+  });
+
+  // Update ScrollTrigger on scroll
+  scroll.on('scroll', ScrollTrigger.update);
+
+  // Navigation elements
   const navLinks = document.querySelectorAll('.nav-link');
   const sections = document.querySelectorAll('.section');
   const mobileMenuBtn = document.querySelector('.mobile-menu-button');
   const navLinksContainer = document.querySelector('.nav-links');
   const header = document.getElementById('header');
-  let lastScrollPosition = 0;
+
+  // GSAP animations for section transitions
+  const sectionAnimation = gsap.timeline({ paused: true });
+  
+  sections.forEach((section, index) => {
+    sectionAnimation.fromTo(section,
+      {
+        opacity: 0,
+        y: 50
+      },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out'
+      },
+      index * 0.1
+    );
+  });
 
   // Handle navigation link clicks
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
-      // Prevent default anchor behavior
       e.preventDefault();
 
-      // Remove active class from all links
       navLinks.forEach(link => link.classList.remove('active'));
-      
-      // Add active class to clicked link
       link.classList.add('active');
-      
-      // Get the target section id from href attribute
+
       const targetId = link.getAttribute('href').substring(1);
-      
-      // Hide all sections and show the target section
+
       sections.forEach(section => {
         section.classList.remove('active');
         if (section.id === targetId) {
           section.classList.add('active');
-          
-          // Update URL without page reload
           history.pushState(null, null, `#${targetId}`);
+          
+          // Animate section transition
+          gsap.fromTo(section,
+            {
+              opacity: 0,
+              y: 20
+            },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.5,
+              ease: 'power2.out'
+            }
+          );
         }
       });
-      
-      // Close mobile menu if open
+
+      // Close mobile menu
       if (window.innerWidth <= 768) {
-        navLinksContainer.classList.remove('active');
-        mobileMenuBtn.classList.remove('active');
+        gsap.to(navLinksContainer, {
+          height: 0,
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            navLinksContainer.classList.remove('active');
+            mobileMenuBtn.classList.remove('active');
+          }
+        });
       }
-      
-      // Scroll to top of section with offset for header
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
+
+      // Smooth scroll to section
+      scroll.scrollTo(document.querySelector(`#${targetId}`), {
+        offset: -100,
+        duration: 1000,
+        easing: [0.25, 0.00, 0.35, 1.00]
       });
     });
   });
 
-  // Mobile menu toggle
+  // Mobile menu toggle with GSAP animation
   mobileMenuBtn.addEventListener('click', () => {
-    navLinksContainer.classList.toggle('active');
+    const isActive = navLinksContainer.classList.contains('active');
+    
+    if (!isActive) {
+      navLinksContainer.classList.add('active');
+      gsap.fromTo(navLinksContainer,
+        {
+          height: 0,
+          opacity: 0
+        },
+        {
+          height: 'auto',
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.inOut'
+        }
+      );
+    } else {
+      gsap.to(navLinksContainer, {
+        height: 0,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          navLinksContainer.classList.remove('active');
+        }
+      });
+    }
+    
     mobileMenuBtn.classList.toggle('active');
   });
-  
+
   // Close mobile menu when clicking outside
   document.addEventListener('click', (e) => {
     if (
@@ -61,50 +139,61 @@ document.addEventListener('DOMContentLoaded', () => {
       !e.target.closest('.mobile-menu-button') &&
       navLinksContainer.classList.contains('active')
     ) {
-      navLinksContainer.classList.remove('active');
-      mobileMenuBtn.classList.remove('active');
+      gsap.to(navLinksContainer, {
+        height: 0,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          navLinksContainer.classList.remove('active');
+          mobileMenuBtn.classList.remove('active');
+        }
+      });
     }
   });
-  
+
   // Handle resize events
+  let resizeTimeout;
   window.addEventListener('resize', () => {
-    if (window.innerWidth > 768 && navLinksContainer.classList.contains('active')) {
-      navLinksContainer.classList.remove('active');
-      mobileMenuBtn.classList.remove('active');
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      if (window.innerWidth > 768 && navLinksContainer.classList.contains('active')) {
+        navLinksContainer.classList.remove('active');
+        mobileMenuBtn.classList.remove('active');
+        navLinksContainer.style.height = '';
+        navLinksContainer.style.opacity = '';
+      }
+      scroll.update();
+    }, 250);
+  });
+
+  // Header scroll behavior with GSAP
+  ScrollTrigger.create({
+    start: 'top -50',
+    end: 99999,
+    toggleClass: {
+      className: 'header-scrolled',
+      targets: header
     }
   });
-  
-  // Check URL hash on page load and activate corresponding section
+
+  // Check URL hash on page load
   const checkHash = () => {
     const hash = window.location.hash;
     if (hash) {
       const targetLink = document.querySelector(`.nav-link[href="${hash}"]`);
       if (targetLink) {
-        // Trigger click event on the link
-        targetLink.click();
+        setTimeout(() => targetLink.click(), 100);
       }
     } else {
-      // Default to first tab if no hash
       navLinks[0].click();
     }
   };
-  
-  // Header scroll behavior
-  window.addEventListener('scroll', () => {
-    const currentScrollPosition = window.scrollY;
-    
-    if (currentScrollPosition > 50) {
-      header.style.boxShadow = 'var(--shadow-md)';
-    } else {
-      header.style.boxShadow = 'var(--shadow-sm)';
-    }
-    
-    lastScrollPosition = currentScrollPosition;
-  });
-  
-  // Run hash check after DOM is fully loaded
-  setTimeout(checkHash, 100);
-  
-  // Listen for hash changes
+
+  // Initialize page
+  checkHash();
   window.addEventListener('hashchange', checkHash);
+  
+  // Trigger initial animations
+  sectionAnimation.play();
 });
